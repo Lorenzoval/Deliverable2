@@ -27,6 +27,7 @@ public class Deliverable2 {
                 logMsg = MessageFormat.format("Updating {0} source code",
                         projectName);
                 pb = new ProcessBuilder("git", "pull");
+                pb.directory(file);
             }
         } else {
             logMsg = MessageFormat.format("Downloading {0} source code",
