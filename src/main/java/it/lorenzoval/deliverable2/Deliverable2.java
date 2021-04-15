@@ -3,6 +3,7 @@ package it.lorenzoval.deliverable2;
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,7 +13,7 @@ public class Deliverable2 {
 
     private static final Logger logger = Logger.getLogger(Deliverable2.class.getName());
 
-    public static void main( String[] args ) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         ProcessBuilder pb;
         final String projectName = PROJECT_URL.substring(PROJECT_URL.lastIndexOf('/') + 1);
         File file = new File(projectName);
@@ -38,6 +39,12 @@ public class Deliverable2 {
         pb.inheritIO();
         Process pr = pb.start();
         pr.waitFor();
+
+        List<Issue> bugs = JIRAHandler.getBugs(projectName);
+
+        for (Issue bug : bugs) {
+            logger.log(Level.INFO, bug.getKey());
+        }
     }
 
 }
