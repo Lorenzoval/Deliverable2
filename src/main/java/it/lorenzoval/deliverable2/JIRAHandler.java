@@ -25,7 +25,7 @@ public class JIRAHandler {
     private JIRAHandler() {
     }
 
-    public static List<Issue> getBugs(String projectName) {
+    public static List<Issue> getBugs(Project project) {
         int i = 0;
         int j;
         int total = 1;
@@ -34,7 +34,7 @@ public class JIRAHandler {
 
         do {
             j = i + 1000;
-            url = MessageFormat.format(API_URL, projectName.toUpperCase(Locale.ROOT), Integer.toString(i),
+            url = MessageFormat.format(API_URL, project.getProjectName().toUpperCase(Locale.ROOT), Integer.toString(i),
                     Integer.toString(j));
 
             try (InputStream in = new URL(url).openStream()) {
