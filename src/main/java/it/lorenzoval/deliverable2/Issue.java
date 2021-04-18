@@ -11,4 +11,5 @@ public class Issue {
     public String getKey() {
         return this.key;
     }
+
 }
