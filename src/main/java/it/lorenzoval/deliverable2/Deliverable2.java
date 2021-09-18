@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -18,6 +19,7 @@ public class Deliverable2 {
         StringBuilder line = new StringBuilder();
         lines.add("Version,File Name,LOC");
         List<Release> releases = JIRAHandler.getReleases(project);
+        Collections.sort(releases);
         for (Release release : releases) {
             GitHandler.changeRelease(project, release);
             List<String> files = GitHandler.getFiles(project);

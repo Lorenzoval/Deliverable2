@@ -27,10 +27,10 @@ public class JIRAHandler {
     private JIRAHandler() {
     }
 
-    public static List<Issue> getBugs(Project project) {
+    public static List<Issue> getBugs(Project project) throws IOException {
         int i = 0;
         int j;
-        int total = 1;
+        int total;
         String url;
         List<Issue> bugs = new ArrayList<>();
 
@@ -48,8 +48,6 @@ public class JIRAHandler {
                     bugs.add(new Issue(issues.getJSONObject(i % 1000).get("key").toString()));
                 }
 
-            } catch (IOException ioe) {
-                logger.log(Level.WARNING, ioe.toString());
             }
 
         } while (i < total);
@@ -57,7 +55,7 @@ public class JIRAHandler {
         return bugs;
     }
 
-    public static List<Release> getReleases(Project project) {
+    public static List<Release> getReleases(Project project) throws IOException {
         String url;
         List<Release> releases = new ArrayList<>();
         url = MessageFormat.format(RELEASES_URL, project.getProjectName().toUpperCase(Locale.ROOT));
@@ -83,9 +81,6 @@ public class JIRAHandler {
                     }
                 }
             }
-
-        } catch (IOException ioe) {
-            logger.log(Level.WARNING, ioe.toString());
         }
 
         return releases;
