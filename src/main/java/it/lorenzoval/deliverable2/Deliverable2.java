@@ -6,10 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -84,30 +82,57 @@ public class Deliverable2 {
         return retList;
     }
 
-    public static void buildDataset(Project project) throws IOException, InterruptedException {
+    public static void writeToCSV(Project project, List<Release> releases) throws IOException {
         File outFile = new File(project.getProjectName() + ".csv");
         List<String> lines = new ArrayList<>();
         StringBuilder line = new StringBuilder();
-        lines.add("Version,File Name,LOC");
-        List<Release> allReleases = JIRAHandler.getReleases(project);
-        Collections.sort(allReleases);
-        List<Release> mainReleases = dropBackwardCompatibility(allReleases);
-        List<Release> releases = dropLastFiftyPercent(mainReleases);
+        lines.add("Version,File Name,LOC,LOC_touched,NR,NAuth,LOC_added,MAX_LOC_added,AVG_LOC_added,Churn,MAX_Churn," +
+                "AVG_Churn,ChgSetSize,MAX_ChgSet,AVG_ChgSet,Age,WeightedAge");
         for (Release release : releases) {
-            if (GitHandler.changeRelease(project, release) != 0)
-                continue;
-            List<String> files = GitHandler.getFiles(project);
-            for (String file : files) {
+            Map<String, Metrics> fileMetrics = release.getFiles();
+            for (Map.Entry<String, Metrics> entry : fileMetrics.entrySet()) {
+                Metrics metrics = entry.getValue();
                 line.setLength(0);
-                long loc;
-                try (Stream<String> fileLines = Files.lines(Paths.get(project.getProjectName(), file))) {
-                    loc = fileLines.count();
-                }
-                line.append(release.getName()).append(",").append(file).append(",").append(loc);
+                line.append(release.getName()).append(",").append(entry.getKey()).append(",").append(metrics.getLoc())
+                        .append(",").append(metrics.getLocTouched()).append(",").append(metrics.getNumRevs())
+                        .append(",").append(metrics.getNumAuthors()).append(",").append(metrics.getLocAdded())
+                        .append(",").append(metrics.getMaxLocAdded()).append(",").append(metrics.getAvgLocAdded())
+                        .append(",").append(metrics.getChurn()).append(",").append(metrics.getMaxChurn())
+                        .append(",").append(metrics.getAvgChurn()).append(",").append(metrics.getChgSetSize())
+                        .append(",").append(metrics.getMaxChgSetSize()).append(",").append(metrics.getAvgChgSetSize())
+                        .append(",").append(metrics.getAge()).append(",").append(metrics.getWeightedAge());
                 lines.add(line.toString());
             }
         }
         FileUtils.writeLines(outFile, lines);
+    }
+
+    public static void getFiles(Project project, List<Release> releases) throws IOException, InterruptedException {
+        for (Release release : releases) {
+            GitHandler.changeRelease(project, release);
+            List<String> files = GitHandler.getFiles(project);
+            for (String file : files) {
+                long loc;
+                if (file.endsWith(".java")) {
+                    try (Stream<String> fileLines = Files.lines(Paths.get(project.getProjectName(), file))) {
+                        loc = fileLines.count();
+                    }
+                    LocalDate creationDate = GitHandler.getFileCreationDate(project, file);
+                    release.addFile(file, loc, creationDate);
+                }
+            }
+        }
+    }
+
+    public static void buildDataset(Project project) throws IOException, InterruptedException {
+        List<Release> allReleases = JIRAHandler.getReleases(project);
+        Collections.sort(allReleases);
+        List<Release> mainReleases = dropBackwardCompatibility(allReleases);
+        List<Release> releases = dropLastFiftyPercent(mainReleases);
+        getFiles(project, releases);
+        List<Commit> commits = new ArrayList<>();
+        GitHandler.getCommitRelatedMetrics(project, commits, releases);
+        writeToCSV(project, releases);
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
