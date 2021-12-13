@@ -86,8 +86,8 @@ public class Deliverable2 {
         File outFile = new File(project.getProjectName() + ".csv");
         List<String> lines = new ArrayList<>();
         StringBuilder line = new StringBuilder();
-        lines.add("Version,File Name,LOC,LOC_touched,NR,NAuth,LOC_added,MAX_LOC_added,AVG_LOC_added,Churn,MAX_Churn," +
-                "AVG_Churn,ChgSetSize,MAX_ChgSet,AVG_ChgSet,Age,WeightedAge");
+        lines.add("Version,File Name,LOC,LOC_touched,NR,NFix,NAuth,LOC_added,MAX_LOC_added,AVG_LOC_added,Churn," +
+                "MAX_Churn,AVG_Churn,ChgSetSize,MAX_ChgSet,AVG_ChgSet,Age,WeightedAge");
         for (Release release : releases) {
             Map<String, Metrics> fileMetrics = release.getFiles();
             for (Map.Entry<String, Metrics> entry : fileMetrics.entrySet()) {
@@ -95,12 +95,13 @@ public class Deliverable2 {
                 line.setLength(0);
                 line.append(release.getName()).append(",").append(entry.getKey()).append(",").append(metrics.getLoc())
                         .append(",").append(metrics.getLocTouched()).append(",").append(metrics.getNumRevs())
-                        .append(",").append(metrics.getNumAuthors()).append(",").append(metrics.getLocAdded())
-                        .append(",").append(metrics.getMaxLocAdded()).append(",").append(metrics.getAvgLocAdded())
-                        .append(",").append(metrics.getChurn()).append(",").append(metrics.getMaxChurn())
-                        .append(",").append(metrics.getAvgChurn()).append(",").append(metrics.getChgSetSize())
-                        .append(",").append(metrics.getMaxChgSetSize()).append(",").append(metrics.getAvgChgSetSize())
-                        .append(",").append(metrics.getAge()).append(",").append(metrics.getWeightedAge());
+                        .append(",").append(metrics.getNumFixes()).append(",").append(metrics.getNumAuthors())
+                        .append(",").append(metrics.getLocAdded()).append(",").append(metrics.getMaxLocAdded())
+                        .append(",").append(metrics.getAvgLocAdded()).append(",").append(metrics.getChurn())
+                        .append(",").append(metrics.getMaxChurn()).append(",").append(metrics.getAvgChurn())
+                        .append(",").append(metrics.getChgSetSize()).append(",").append(metrics.getMaxChgSetSize())
+                        .append(",").append(metrics.getAvgChgSetSize()).append(",").append(metrics.getAge())
+                        .append(",").append(metrics.getWeightedAge());
                 lines.add(line.toString());
             }
         }
@@ -124,14 +125,42 @@ public class Deliverable2 {
         }
     }
 
+    public static void updateAffectedFiles(Release release, Issue bug, Commit commit) {
+        for (String file : commit.getFiles()) {
+            release.increaseFixes(file);
+            bug.addAffectedFile(file);
+        }
+    }
+
+    public static void getAffectedFiles(List<Release> releases, List<Issue> bugs) {
+        ListIterator<Issue> iterator = bugs.listIterator();
+        while (iterator.hasNext()) {
+            Issue bug = iterator.next();
+            Pattern p = Pattern.compile("\\b" + bug.getKey() + "\\b", Pattern.CASE_INSENSITIVE);
+            for (Release release : releases) {
+                for (Commit commit : release.getCommits()) {
+                    Matcher m = p.matcher(commit.getSubject());
+                    if (m.find()) {
+                        updateAffectedFiles(release, bug, commit);
+                    }
+                }
+            }
+            if (bug.getAffectedFiles().isEmpty()) {
+                logger.log(Level.INFO, "Issue {0} has no commit associated, discarded", bug.getKey());
+                iterator.remove();
+            }
+        }
+    }
+
     public static void buildDataset(Project project) throws IOException, InterruptedException {
         List<Release> allReleases = JIRAHandler.getReleases(project);
         Collections.sort(allReleases);
         List<Release> mainReleases = dropBackwardCompatibility(allReleases);
         List<Release> releases = dropLastFiftyPercent(mainReleases);
         getFiles(project, releases);
-        List<Commit> commits = new ArrayList<>();
-        GitHandler.getCommitRelatedMetrics(project, commits, releases);
+        GitHandler.getCommitRelatedMetrics(project, releases);
+        List<Issue> bugs = JIRAHandler.getBugs(project);
+        getAffectedFiles(releases, bugs);
         writeToCSV(project, releases);
     }
 

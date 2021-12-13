@@ -10,6 +10,7 @@ public class Metrics {
     private final HashSet<String> authors;
     private int locTouched;
     private int numRevs;
+    private int numFixes;
     private int locAdded;
     private int maxLocAdded;
     private double avgLocAdded;
@@ -25,6 +26,7 @@ public class Metrics {
         this.loc = loc;
         this.locTouched = 0;
         this.numRevs = 0;
+        this.numFixes = 0;
         this.authors = new HashSet<>();
         this.locAdded = 0;
         this.maxLocAdded = 0;
@@ -48,6 +50,10 @@ public class Metrics {
 
     public int getNumRevs() {
         return this.numRevs;
+    }
+
+    public int getNumFixes() {
+        return this.numFixes;
     }
 
     public int getNumAuthors() {
@@ -112,6 +118,11 @@ public class Metrics {
         this.chgSetSize += chgSetSize;
         this.maxChgSetSize = Math.max(this.maxChgSetSize, chgSetSize);
         this.avgChgSetSize += (chgSetSize - this.avgChgSetSize) / numRevs;
+        return this;
+    }
+
+    public Metrics increaseFixes() {
+        this.numFixes++;
         return this;
     }
 

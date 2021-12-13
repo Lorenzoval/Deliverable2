@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -124,7 +125,13 @@ public class GitHandler {
         return j - i;
     }
 
-    public static void parseLines(String output, List<Commit> commits, Release release) {
+    public static void addCommitIfNotEmpty(Release release, Commit commit) {
+        // Only consider commits related to at least one java file
+        if (!commit.getFiles().isEmpty())
+            release.addCommit(commit);
+    }
+
+    public static void parseLines(String output, Release release) {
         String[] lines = output.split("\n");
         String hash = null;
         String author = null;
@@ -132,13 +139,16 @@ public class GitHandler {
         int locAdded;
         int locDeleted;
         int chgSetSize = 0;
+        List<String> files = new ArrayList<>();
         for (int i = 0; i < lines.length; i++) {
             String str = lines[i];
             if (!str.isEmpty()) {
                 if (str.charAt(0) == '$') {
                     // Add previous commit
-                    if (hash != null)
-                        commits.add(new Commit(hash, author, subject));
+                    if (hash != null) {
+                        addCommitIfNotEmpty(release, new Commit(hash, author, subject, files));
+                        files = new ArrayList<>();
+                    }
 
                     chgSetSize = countFiles(lines, i) - 1; // Files committed together with C
                     String[] values = str.substring(1).split("\\$");
@@ -152,17 +162,17 @@ public class GitHandler {
                         locAdded = Integer.parseInt(temp[0]);
                         locDeleted = Integer.parseInt(temp[1]);
                         String fileName = temp[2];
-                        assert chgSetSize != 0;
+                        files.add(fileName);
                         release.updateMetrics(fileName, author, chgSetSize, locAdded, locDeleted);
                     }
                 }
             }
         }
         // Add last commit
-        commits.add(new Commit(hash, author, subject));
+        addCommitIfNotEmpty(release, new Commit(hash, author, subject, files));
     }
 
-    public static void getReleaseCommitRelatedMetrics(Project project, List<Commit> commits, Release... releases)
+    public static void getReleaseCommitRelatedMetrics(Project project, Release... releases)
             throws IOException, InterruptedException {
         String projectName = project.getProjectName();
         File file = new File(projectName);
@@ -186,18 +196,18 @@ public class GitHandler {
         String output = IOUtils.toString(pr.getInputStream(), StandardCharsets.UTF_8);
         pr.waitFor();
         if (releases.length == 1) {
-            parseLines(output, commits, releases[0]);
+            parseLines(output, releases[0]);
         } else if (releases.length == 2) {
-            parseLines(output, commits, releases[1]);
+            parseLines(output, releases[1]);
         }
     }
 
-    public static void getCommitRelatedMetrics(Project project, List<Commit> commits, List<Release> releases)
+    public static void getCommitRelatedMetrics(Project project, List<Release> releases)
             throws IOException, InterruptedException {
         // Get commits for first release
-        getReleaseCommitRelatedMetrics(project, commits, releases.get(0));
+        getReleaseCommitRelatedMetrics(project, releases.get(0));
         for (int i = 1; i < releases.size(); i++) {
-            getReleaseCommitRelatedMetrics(project, commits, releases.get(i - 1), releases.get(i));
+            getReleaseCommitRelatedMetrics(project, releases.get(i - 1), releases.get(i));
         }
     }
 }

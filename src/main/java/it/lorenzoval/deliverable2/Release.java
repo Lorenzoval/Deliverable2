@@ -1,20 +1,20 @@
 package it.lorenzoval.deliverable2;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class Release implements Comparable<Release> {
 
     private final String name;
     private final LocalDate releaseDate;
     private final Map<String, Metrics> files;
+    private final List<Commit> commits;
 
     public Release(String name, LocalDate releaseDate) {
         this.name = name;
         this.releaseDate = releaseDate;
         this.files = new HashMap<>();
+        this.commits = new ArrayList<>();
     }
 
     public String getName() {
@@ -29,12 +29,24 @@ public class Release implements Comparable<Release> {
         return this.files;
     }
 
+    public List<Commit> getCommits() {
+        return this.commits;
+    }
+
     public void addFile(String fileName, long loc, LocalDate creationDate) {
         files.put(fileName, new Metrics(loc, creationDate, releaseDate));
     }
 
+    public void addCommit(Commit commit) {
+        this.commits.add(commit);
+    }
+
     public void updateMetrics(String fileName, String author, int chgSetSize, int locAdded, int locDeleted) {
         files.computeIfPresent(fileName, (k, v) -> v.updateFromCommit(author, chgSetSize, locAdded, locDeleted));
+    }
+
+    public void increaseFixes(String fileName) {
+        files.computeIfPresent(fileName, (k, v) -> v.increaseFixes());
     }
 
     @Override
