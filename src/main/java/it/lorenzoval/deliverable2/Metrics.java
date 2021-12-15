@@ -22,6 +22,13 @@ public class Metrics {
     private double avgChgSetSize;
     private final long age;
 
+    public Metrics() {
+        // Dummy constructor for dropped releases
+        this.loc = 0;
+        this.authors = null;
+        this.age = 0;
+    }
+
     public Metrics(long loc, LocalDate creationDate, LocalDate releaseDate) {
         this.loc = loc;
         this.locTouched = 0;

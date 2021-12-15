@@ -37,6 +37,11 @@ public class Release implements Comparable<Release> {
         files.put(fileName, new Metrics(loc, creationDate, releaseDate));
     }
 
+    public void addFile(String fileName) {
+        // Dummy addFile for dropped releases
+        files.put(fileName, new Metrics());
+    }
+
     public void addCommit(Commit commit) {
         this.commits.add(commit);
     }
