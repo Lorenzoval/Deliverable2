@@ -21,6 +21,11 @@ public class ReleasesList {
         Collections.sort(releases);
         List<Release> temp = dropBackwardCompatibility(releases);
         this.main = dropLastFiftyPercent(temp);
+        int i = 1;
+        for (Release release : this.main) {
+            release.setId(i);
+            i++;
+        }
         this.dropped = new ArrayList<>(temp.subList(this.main.size(), temp.size()));
     }
 

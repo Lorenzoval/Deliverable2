@@ -10,6 +10,7 @@ public class Release implements Comparable<Release> {
     private final LocalDate jiraReleaseDate; // Used for operations related to bugs
     private final Map<String, Metrics> files;
     private final List<Commit> commits;
+    private int id;
 
     public Release(String name, LocalDate gitReleaseDate, LocalDate jiraReleaseDate) {
         this.name = name;
@@ -37,6 +38,14 @@ public class Release implements Comparable<Release> {
 
     public List<Commit> getCommits() {
         return this.commits;
+    }
+
+    public int getId() {
+        return this.id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public void addFile(String fileName, long loc, LocalDate creationDate) {
