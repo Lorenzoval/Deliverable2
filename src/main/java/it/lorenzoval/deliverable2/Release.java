@@ -6,13 +6,15 @@ import java.util.*;
 public class Release implements Comparable<Release> {
 
     private final String name;
-    private final LocalDate releaseDate;
+    private final LocalDate gitReleaseDate; // Used for file age
+    private final LocalDate jiraReleaseDate; // Used for operations related to bugs
     private final Map<String, Metrics> files;
     private final List<Commit> commits;
 
-    public Release(String name, LocalDate releaseDate) {
+    public Release(String name, LocalDate gitReleaseDate, LocalDate jiraReleaseDate) {
         this.name = name;
-        this.releaseDate = releaseDate;
+        this.gitReleaseDate = gitReleaseDate;
+        this.jiraReleaseDate = jiraReleaseDate;
         this.files = new HashMap<>();
         this.commits = new ArrayList<>();
     }
@@ -21,8 +23,12 @@ public class Release implements Comparable<Release> {
         return this.name;
     }
 
-    public LocalDate getReleaseDate() {
-        return this.releaseDate;
+    public LocalDate getGitReleaseDate() {
+        return this.gitReleaseDate;
+    }
+
+    public LocalDate getJiraReleaseDate() {
+        return this.jiraReleaseDate;
     }
 
     public Map<String, Metrics> getFiles() {
@@ -34,7 +40,7 @@ public class Release implements Comparable<Release> {
     }
 
     public void addFile(String fileName, long loc, LocalDate creationDate) {
-        files.put(fileName, new Metrics(loc, creationDate, releaseDate));
+        files.put(fileName, new Metrics(loc, creationDate, gitReleaseDate));
     }
 
     public void addFile(String fileName) {
@@ -56,7 +62,7 @@ public class Release implements Comparable<Release> {
 
     @Override
     public int compareTo(Release release) {
-        return this.releaseDate.compareTo(release.getReleaseDate());
+        return this.gitReleaseDate.compareTo(release.getGitReleaseDate());
     }
 
     @Override
@@ -66,12 +72,12 @@ public class Release implements Comparable<Release> {
         if (o == null || this.getClass() != o.getClass())
             return false;
         Release release = (Release) o;
-        return this.name.equals(release.name) && this.releaseDate.equals(release.releaseDate);
+        return this.name.equals(release.name) && this.gitReleaseDate.equals(release.gitReleaseDate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.name, this.releaseDate);
+        return Objects.hash(this.name, this.gitReleaseDate);
     }
 
 }
