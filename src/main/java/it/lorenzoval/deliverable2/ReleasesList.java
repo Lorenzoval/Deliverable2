@@ -1,5 +1,6 @@
 package it.lorenzoval.deliverable2;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,12 +21,12 @@ public class ReleasesList {
     public ReleasesList(List<Release> releases) {
         Collections.sort(releases);
         List<Release> temp = dropBackwardCompatibility(releases);
-        this.main = dropLastFiftyPercent(temp);
         int i = 1;
-        for (Release release : this.main) {
+        for (Release release : temp) {
             release.setId(i);
             i++;
         }
+        this.main = dropLastFiftyPercent(temp);
         this.dropped = new ArrayList<>(temp.subList(this.main.size(), temp.size()));
     }
 
@@ -97,6 +98,77 @@ public class ReleasesList {
         for (int i = 0; i < releases.size() / 2; i++)
             retList.add(releases.get(i));
         return retList;
+    }
+
+    public Release getReleaseByDate(LocalDate date) {
+        // Check last releaseDate of main releases
+        if (main.get(main.size() - 1).getJiraReleaseDate().isBefore(date)) {
+            for (Release release : dropped) {
+                if (release.getJiraReleaseDate().isAfter(date))
+                    return release;
+            }
+        } else {
+            for (Release release : main) {
+                if (release.getJiraReleaseDate().isAfter(date))
+                    return release;
+            }
+        }
+        return null;
+    }
+
+    public Release getReleaseByName(String name) {
+        for (Release release : main) {
+            if (release.getName().equals(name))
+                return release;
+        }
+        for (Release release : dropped) {
+            if (release.getName().equals(name))
+                return release;
+        }
+        return null;
+    }
+
+    private void avInDropped(List<Release> releases, double iv, int fv) {
+        for (Release release : dropped) {
+            if (release.getId() == fv)
+                break;
+            if (release.getId() >= iv)
+                releases.add(release);
+        }
+    }
+
+    private void avBetweenMainAndDropped(List<Release> releases, double iv, int fv) {
+        for (Release release : main)
+            if (release.getId() >= iv)
+                releases.add(release);
+        for (Release release : dropped) {
+            if (release.getId() == fv)
+                break;
+            releases.add(release);
+        }
+    }
+
+    private void avInMain(List<Release> releases, double iv, int fv) {
+        for (Release release : main) {
+            if (release.getId() == fv)
+                break;
+            if (release.getId() >= iv)
+                releases.add(release);
+        }
+    }
+
+    public List<Release> getReleasesBetween(double iv, int fv) {
+        List<Release> releases = new ArrayList<>();
+        if (iv > main.get(main.size() - 1).getId()) {
+            avInDropped(releases, iv, fv);
+        } else {
+            if (fv > main.get(main.size() - 1).getId()) {
+                avBetweenMainAndDropped(releases, iv, fv);
+            } else {
+                avInMain(releases, iv, fv);
+            }
+        }
+        return releases;
     }
 
 }

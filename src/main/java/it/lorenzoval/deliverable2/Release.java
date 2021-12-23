@@ -69,6 +69,10 @@ public class Release implements Comparable<Release> {
         files.computeIfPresent(fileName, (k, v) -> v.increaseFixes());
     }
 
+    public void setBuggy(String fileName) {
+        files.computeIfPresent(fileName, (k, v) -> v.setBuggy());
+    }
+
     @Override
     public int compareTo(Release release) {
         return this.gitReleaseDate.compareTo(release.getGitReleaseDate());

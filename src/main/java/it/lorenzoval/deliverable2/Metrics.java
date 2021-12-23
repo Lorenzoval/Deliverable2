@@ -8,6 +8,7 @@ public class Metrics {
 
     private final long loc;
     private final HashSet<String> authors;
+    private final long age;
     private int locTouched;
     private int numRevs;
     private int numFixes;
@@ -20,7 +21,7 @@ public class Metrics {
     private int chgSetSize;
     private int maxChgSetSize;
     private double avgChgSetSize;
-    private final long age;
+    private boolean buggy;
 
     public Metrics() {
         // Dummy constructor for dropped releases
@@ -45,6 +46,7 @@ public class Metrics {
         this.maxChgSetSize = 0;
         this.avgChgSetSize = 0;
         this.age = ChronoUnit.WEEKS.between(creationDate, releaseDate);
+        this.buggy = false;
     }
 
     public long getLoc() {
@@ -111,6 +113,10 @@ public class Metrics {
         return this.age * this.locTouched;
     }
 
+    public boolean isBuggy() {
+        return this.buggy;
+    }
+
     public Metrics updateFromCommit(String author, int chgSetSize, int locAdded, int locDeleted) {
         this.locTouched += locAdded + locDeleted;
         this.numRevs++;
@@ -130,6 +136,11 @@ public class Metrics {
 
     public Metrics increaseFixes() {
         this.numFixes++;
+        return this;
+    }
+
+    public Metrics setBuggy() {
+        this.buggy = true;
         return this;
     }
 

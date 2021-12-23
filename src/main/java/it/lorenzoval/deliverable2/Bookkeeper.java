@@ -4,7 +4,7 @@ public class Bookkeeper extends Project {
 
     public Bookkeeper() {
         super("https://github.com/apache/bookkeeper", "bookkeeper",
-                "release-{0}");
+                "release-{0}", 0.02);
     }
 
 }
