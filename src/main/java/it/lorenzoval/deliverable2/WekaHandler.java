@@ -226,14 +226,14 @@ public class WekaHandler {
 
     private static Instances loadCSV(Project project) throws IOException {
         CSVLoader loader = new CSVLoader();
-        loader.setSource(new File(project.getProjectName() + ".csv"));
+        loader.setSource(new File(project.getProjectName() + "_metrics.csv"));
         // Set Yes as positive for Buggy
         loader.setNominalLabelSpecs(new Object[]{"Buggy:Yes,No"});
         return loader.getDataSet();
     }
 
     public static void evaluateDataset(Project project) throws Exception {
-        File outFile = new File(project.getProjectName() + "_out.csv");
+        File outFile = new File(project.getProjectName() + "_weka.csv");
         Instances dataset = loadCSV(project);
         dataset.setClassIndex(dataset.numAttributes() - 1);
         WekaResult wekaResult = new WekaResult();

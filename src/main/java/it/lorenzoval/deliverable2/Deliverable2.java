@@ -19,7 +19,7 @@ public class Deliverable2 {
     private static final Logger logger = Logger.getLogger(Deliverable2.class.getName());
 
     public static void writeDatasetToCSV(Project project, List<Release> releases) throws IOException {
-        File outFile = new File(project.getProjectName() + ".csv");
+        File outFile = new File(project.getProjectName() + "_metrics.csv");
         List<String> lines = new ArrayList<>();
         StringBuilder line = new StringBuilder();
         lines.add("Version,File Name,LOC,LOC_touched,NR,NFix,NAuth,LOC_added,MAX_LOC_added,AVG_LOC_added,Churn," +
