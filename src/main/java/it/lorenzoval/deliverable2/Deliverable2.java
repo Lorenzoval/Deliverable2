@@ -18,7 +18,7 @@ public class Deliverable2 {
 
     private static final Logger logger = Logger.getLogger(Deliverable2.class.getName());
 
-    public static void writeToCSV(Project project, List<Release> releases) throws IOException {
+    public static void writeDatasetToCSV(Project project, List<Release> releases) throws IOException {
         File outFile = new File(project.getProjectName() + ".csv");
         List<String> lines = new ArrayList<>();
         StringBuilder line = new StringBuilder();
@@ -97,10 +97,10 @@ public class Deliverable2 {
         logger.log(Level.INFO, "Gathering issues for {0}", project.getProjectName());
         List<Issue> bugs = JIRAHandler.getBugs(project, releasesList);
         setBuggyFiles(releasesList, bugs);
-        writeToCSV(project, releasesList.getMain());
+        writeDatasetToCSV(project, releasesList.getMain());
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws Exception {
         Project syncope = new Syncope();
         Project bookkeeper = new Bookkeeper();
         logger.log(Level.INFO, "Updating projects");
@@ -109,6 +109,8 @@ public class Deliverable2 {
         logger.log(Level.INFO, "Generating datasets");
         buildDataset(syncope);
         buildDataset(bookkeeper);
+        WekaHandler.evaluateDataset(syncope);
+        WekaHandler.evaluateDataset(bookkeeper);
     }
 
 }
